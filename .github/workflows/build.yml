@@ -31,10 +31,23 @@ jobs:
       - name: Build
         run: |
           mkdir -p dist
-          g++ -std=c++17 -O2 -Wall -Wextra -o dist/dewechat.exe src/wechat.cpp -lcrypto
+          g++ -std=c++17 -O2 -Wall -Wextra -static-libgcc -static-libstdc++ -o dist/dewechat.exe src/wechat.cpp -lcrypto -lcrypt32 -lws2_32
+          ldd dist/dewechat.exe | awk '/mingw64/ { print $3 }' | while read -r dll; do
+            cp "$dll" dist/
+          done
+          cat > dist/README.txt <<'EOF'
+          Put dewechat.exe and any DLL files in this folder together.
+          Run it against a copied WeChat database, not the original database.
+
+          Example:
+            dewechat.exe ChatMsg.db
+
+          Output:
+            dec_ChatMsg.db
+          EOF
 
       - name: Upload executable
         uses: actions/upload-artifact@v4
         with:
           name: dewechat-windows-x64
-          path: dist/dewechat.exe
+          path: dist/
